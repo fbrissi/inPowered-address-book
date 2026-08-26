@@ -1,0 +1,14 @@
+scripts:
+  actionlint: sh -c 'kool docker rhysd/actionlint:latest .github/workflows/*.yml'
+
+  gradle: kool docker gradle:jdk26 gradle
+  build: kool run gradle build --no-daemon
+  lint: kool run gradle checkstyleMain checkstyleTest --no-daemon
+  test: kool run gradle test --no-daemon
+  app: kool run gradle bootRun --no-daemon
+
+  quality:
+    - kool run actionlint
+    - kool run lint
+    - kool run test
+    - kool run build
