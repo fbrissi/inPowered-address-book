@@ -16,14 +16,17 @@
 ## Commands
 
 - Build and test: `./gradlew build --no-daemon`
-- Run Checkstyle for main and test sources: `./gradlew checkstyleMain checkstyleTest --no-daemon`
-- Run all tests: `./gradlew test --no-daemon`
-- Run the context test only: `./gradlew test --tests 'fbrissi.dev.inPowered.AddressBookApplicationTests' --no-daemon`
+- Run all quality checks and tests: `./gradlew check --no-daemon`
+- Run unit tests: `./gradlew test --no-daemon`
+- Run integration tests: `./gradlew integrationTest --no-daemon`
+- Generate and verify HTML/XML coverage reports: `./gradlew codeCoverageVerification --no-daemon`
+- Run Checkstyle for all sources: `./gradlew checkstyleMain checkstyleTest checkstyleIntegrationTest --no-daemon`
 - Run the application: `./gradlew bootRun --no-daemon`
 - Gradle can also run directly on the host when Java 26 and a compatible Gradle installation are available: `gradle bootRun --no-daemon`.
-- Kool equivalents are `kool run build`, `kool run test`, and `kool run app`.
+- Kool equivalents are `kool run build`, `kool run test`, `kool run integration-test`, and `kool run app`.
 - The direct Docker equivalent of `kool run app` is `docker run --init --rm -w /app -i -t --volume .:/app:delegated gradle:jdk26 gradle bootRun --no-daemon`.
 
 ## Tests
 
-- Tests use JUnit Platform via `useJUnitPlatform()` and currently include a Spring `@SpringBootTest` context-load test.
+- Unit tests are under `src/test/unit/java` and integration tests are under `src/test/integration/java`.
+- Tests use JUnit Platform via `useJUnitPlatform()`; `check` runs unit tests, integration tests, and Checkstyle.

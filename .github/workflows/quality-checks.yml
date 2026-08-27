@@ -55,18 +55,39 @@ jobs:
   quality-jobs:
     name: Quality Checks
     runs-on: ubuntu-24.04
-    needs: [actionlint, quality]
+    needs: [actionlint, quality, coverage]
     if: ${{ always() }}
     steps:
       - name: Validate quality results
         env:
           ACTIONLINT_RESULT: ${{ needs.actionlint.result }}
           QUALITY_RESULT: ${{ needs.quality.result }}
+          COVERAGE_RESULT: ${{ needs.coverage.result }}
         run: |
           set -euo pipefail
 
-          if [ "$ACTIONLINT_RESULT" != 'success' ] || [ "$QUALITY_RESULT" != 'success' ]; then
+          if [ "$ACTIONLINT_RESULT" != 'success' ] || [ "$QUALITY_RESULT" != 'success' ] \
+            || [ "$COVERAGE_RESULT" != 'success' ]; then
             echo "Actionlint result: $ACTIONLINT_RESULT"
             echo "Quality result: $QUALITY_RESULT"
+            echo "Coverage result: $COVERAGE_RESULT"
             exit 1
           fi
+
+  coverage:
+    name: Quality / coverage
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '26'
+          cache: gradle
+      - name: Generate coverage report
+        run: ./gradlew codeCoverageVerification --no-daemon
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage-report
+          path: build/reports/jacoco/codeCoverageReport/

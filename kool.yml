@@ -3,12 +3,16 @@ scripts:
 
   gradle: kool docker gradle:jdk26 gradle
   build: kool run gradle build --no-daemon
-  lint: kool run gradle checkstyleMain checkstyleTest --no-daemon
+  lint: kool run gradle checkstyleMain checkstyleTest checkstyleIntegrationTest --no-daemon
   test: kool run gradle test --no-daemon
+  integration-test: kool run gradle integrationTest --no-daemon
+  coverage: kool run gradle codeCoverageVerification --no-daemon
   app: kool run gradle bootRun --no-daemon --args="address-book"
 
   quality:
     - kool run actionlint
     - kool run lint
     - kool run test
+    - kool run integration-test
+    - kool run coverage
     - kool run build

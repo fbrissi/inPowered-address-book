@@ -26,6 +26,7 @@ Other available commands:
 kool run build
 kool run lint
 kool run test
+kool run integration-test
 ```
 
 ## Run With Docker
@@ -40,8 +41,9 @@ To build or test without Kool:
 
 ```bash
 docker run --init --rm -w /app -i -t --volume .:/app:delegated gradle:jdk26 gradle build --no-daemon
-docker run --init --rm -w /app -i -t --volume .:/app:delegated gradle:jdk26 gradle checkstyleMain checkstyleTest --no-daemon
+docker run --init --rm -w /app -i -t --volume .:/app:delegated gradle:jdk26 gradle check --no-daemon
 docker run --init --rm -w /app -i -t --volume .:/app:delegated gradle:jdk26 gradle test --no-daemon
+docker run --init --rm -w /app -i -t --volume .:/app:delegated gradle:jdk26 gradle integrationTest --no-daemon
 ```
 
 ## Run With Local Java
@@ -51,8 +53,10 @@ With Java 26 available locally, use the Gradle wrapper:
 ```bash
 ./gradlew bootRun --no-daemon
 ./gradlew build --no-daemon
-./gradlew checkstyleMain checkstyleTest --no-daemon
 ./gradlew test --no-daemon
+./gradlew integrationTest --no-daemon
+./gradlew codeCoverageVerification --no-daemon
+./gradlew check --no-daemon
 ```
 
 Gradle can also be run directly without Docker or Kool when a compatible Gradle installation is available:
@@ -60,8 +64,10 @@ Gradle can also be run directly without Docker or Kool when a compatible Gradle 
 ```bash
 gradle bootRun --no-daemon
 gradle build --no-daemon
-gradle checkstyleMain checkstyleTest --no-daemon
 gradle test --no-daemon
+gradle integrationTest --no-daemon
+gradle codeCoverageVerification --no-daemon
+gradle check --no-daemon
 ```
 
 The wrapper is preferred for reproducible builds because it uses the repository-pinned Gradle version.
@@ -71,7 +77,9 @@ The Gradle toolchain requires Java 26. `.sdkmanrc` specifies Amazon Corretto `26
 ## Project Layout
 
 - `src/main/java/fbrissi/dev/inPowered`: application source
-- `src/test/java/fbrissi/dev/inPowered`: tests
+- `src/test/unit/java`: unit tests
+- `src/test/integration/java`: integration tests
+- `build/reports/jacoco/codeCoverageReport/html/index.html`: HTML coverage report
 - `src/main/resources/application.properties`: Spring Boot configuration
 - `AddressBook.txt`: root-level input data file
 - `kool.yml`: Kool command definitions
