@@ -25,7 +25,7 @@ jobs:
     name: Quality / actionlint
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Validate GitHub Actions workflows
         run: docker run --rm -v "$GITHUB_WORKSPACE:/repo" -w /repo rhysd/actionlint:latest .github/workflows/*.yml
 
@@ -43,7 +43,7 @@ jobs:
           - name: build
             command: ./gradlew build --no-daemon
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -78,7 +78,7 @@ jobs:
     name: Quality / coverage
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
