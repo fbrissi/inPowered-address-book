@@ -5,7 +5,7 @@ scripts:
   build: kool run gradle build --no-daemon
   lint: kool run gradle checkstyleMain checkstyleTest --no-daemon
   test: kool run gradle test --no-daemon
-  app: kool run gradle bootRun --no-daemon
+  app: kool run gradle bootRun --no-daemon --args="address-book"
 
   quality:
     - kool run actionlint
