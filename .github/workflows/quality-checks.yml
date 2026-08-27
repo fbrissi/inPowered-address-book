@@ -87,7 +87,92 @@ jobs:
       - name: Generate coverage report
         run: ./gradlew codeCoverageVerification --no-daemon
       - name: Upload coverage report
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: code-coverage-report
           path: build/reports/jacoco/codeCoverageReport/
+          if-no-files-found: ignore
+      - name: Publish test summary
+        if: ${{ always() }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          get_attr() {
+            local line="$1"
+            local attr="$2"
+
+            printf '%s\n' "$line" | sed -n "s/.* ${attr}=\"\([^\"]*\)\".*/\1/p" | head -n 1
+          }
+
+          tests=0
+          failures=0
+          errors=0
+          skipped=0
+          duration=0
+          junit_files=0
+
+          for report in build/test-results/test/*.xml build/test-results/integrationTest/*.xml; do
+            if [ ! -f "$report" ]; then
+              continue
+            fi
+
+            junit_files=$((junit_files + 1))
+            suite_line=$(grep -o '<testsuite [^>]*>' "$report" | head -n 1 || true)
+            report_tests=$(get_attr "$suite_line" tests)
+            report_failures=$(get_attr "$suite_line" failures)
+            report_errors=$(get_attr "$suite_line" errors)
+            report_skipped=$(get_attr "$suite_line" skipped)
+            report_time=$(get_attr "$suite_line" time)
+            report_tests=${report_tests:-0}
+            report_failures=${report_failures:-0}
+            report_errors=${report_errors:-0}
+            report_skipped=${report_skipped:-0}
+            report_time=${report_time:-0}
+            report_time=${report_time/,/.}
+            tests=$((tests + report_tests))
+            failures=$((failures + report_failures))
+            errors=$((errors + report_errors))
+            skipped=$((skipped + report_skipped))
+            duration=$(awk -v total="$duration" -v value="$report_time" 'BEGIN { printf "%.3f", total + value }')
+          done
+
+          line_coverage='n/a'
+          branch_coverage='n/a'
+          jacoco_report='build/reports/jacoco/codeCoverageReport/codeCoverageReport.xml'
+
+          if [ -f "$jacoco_report" ]; then
+            line_counter=$(grep -o '<counter type="LINE"[^>]*/>' "$jacoco_report" | tail -n 1 || true)
+            branch_counter=$(grep -o '<counter type="BRANCH"[^>]*/>' "$jacoco_report" | tail -n 1 || true)
+            line_missed=$(printf '%s\n' "$line_counter" | sed -n 's/.*missed="\([0-9]*\)".*/\1/p')
+            line_covered=$(printf '%s\n' "$line_counter" | sed -n 's/.*covered="\([0-9]*\)".*/\1/p')
+            branch_missed=$(printf '%s\n' "$branch_counter" | sed -n 's/.*missed="\([0-9]*\)".*/\1/p')
+            branch_covered=$(printf '%s\n' "$branch_counter" | sed -n 's/.*covered="\([0-9]*\)".*/\1/p')
+
+            if [ -n "$line_missed" ] && [ -n "$line_covered" ]; then
+              line_coverage=$(awk -v missed="$line_missed" -v covered="$line_covered" 'BEGIN { printf "%.2f%%", covered * 100 / (missed + covered) }')
+            fi
+            if [ -n "$branch_missed" ] && [ -n "$branch_covered" ]; then
+              branch_coverage=$(awk -v missed="$branch_missed" -v covered="$branch_covered" 'BEGIN { printf "%.2f%%", covered * 100 / (missed + covered) }')
+            fi
+          fi
+
+          {
+            echo '## Backend test report'
+            echo
+            echo '| Metric | Value |'
+            echo '| --- | ---: |'
+            echo "| Tests | $tests |"
+            echo "| Failures | $failures |"
+            echo "| Errors | $errors |"
+            echo "| Skipped | $skipped |"
+            echo "| Duration | ${duration}s |"
+            echo "| Line coverage | $line_coverage |"
+            echo "| Branch coverage | $branch_coverage |"
+            echo
+            if [ "$junit_files" -eq 0 ]; then
+              echo 'JUnit test reports were not generated.'
+            fi
+            echo "HTML coverage report is available in the \`code-coverage-report\` artifact."
+          } >> "$GITHUB_STEP_SUMMARY"
