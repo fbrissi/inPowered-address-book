@@ -44,7 +44,7 @@ jobs:
             command: ./gradlew build --no-daemon
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '26'
@@ -79,7 +79,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '26'
